@@ -193,7 +193,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 {
   load("../data/df_ABM.Rda")
   #exclude simulations in which behavior went completely extinct
-  data = df_ABM[complete.cases(data),]
+  data = df_ABM[complete.cases(df_ABM),]
   condition_colors= c("#14213d","#fca311")
   
   p1 = ggplot(data, aes(x=s_i, y=prop_efficient))+
