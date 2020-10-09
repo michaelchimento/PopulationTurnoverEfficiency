@@ -1,4 +1,5 @@
 library(tidyverse)
+library(ggpubr)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -44,7 +45,6 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #Fig 2 A,B,C
 {
-  library(ggarrange)
   load("../data/df_solves.Rda")
   df = df_solves %>% filter(solver==1,solve_speed<60)
   solution_cols = c("#ff5959","#03039e")
