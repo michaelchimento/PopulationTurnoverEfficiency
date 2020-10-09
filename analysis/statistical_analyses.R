@@ -1,4 +1,4 @@
-#The following R code reproduces the statistical analyses presented in the manuscript Demographic turnover facilitates selection for efficiency
+#The following R code reproduces the statistical analyses presented in the manuscript Population turnover facilitates selection for efficiency
 #All analyses written by Michael Chimento
 library(lme4)
 library(lmerTest)
