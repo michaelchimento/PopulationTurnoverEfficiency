@@ -1,7 +1,7 @@
 All analysis was conducted using R[1] and the packages tidyverse[2], lme4[3], lmerTest[4], rms[5], and ggpubr[6].
 
 # Instructions
-Each block of code is self-contained, and can be run as-is in base R or R-Studio. Data is imported from the "data" directory of this repository.
+Each block of code is self-contained, and can be run as-is in R-Studio. Data is imported from the "data" directory of this repository.
 
 # References
 1. R Core Team (2018). R: A language and environment for statistical computing.R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
