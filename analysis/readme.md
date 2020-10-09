@@ -1,4 +1,4 @@
-All analysis was conducted using R and R-Studio[1,2] and the packages tidyverse[3], lme4[4], lmerTest[5], rms[6], and ggpubr[7].
+All analysis was conducted using R-Studio (version 1.1.456; R version 3.5.1)[1,2] and the packages tidyverse (1.3.0)[3], lme4 (1.1-23)[4], lmerTest (3.1-2)[5], rms (6.0-0)[6], and ggpubr (0.3.0)[7].
 
 # Instructions
 Each block of code is self-contained, and can be run as-is in R-Studio. Data is imported from the "data" directory of this repository.
