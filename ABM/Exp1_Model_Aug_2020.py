@@ -25,7 +25,6 @@ N = 6
 s_i = 0 #importance of social information
 g_i = 0 #updating weight for new payoff information
 conformity = 10 #conformity exponent
-init_learn_prob = 0.01
 inverse_temp = 1
 
 #payoffs for inefficient, efficient behavior
@@ -282,33 +281,16 @@ def turnover_event(G,timestep):
     #print("turnover_event(). turnover event: {} replaced".format(turnover_list))
 
 
-#ended up not using this function in the MS
-def calculate_probabilities(G, naives):
-
-    if naives:
-        uptake_vector = [(1 - G.nodes[agent]["data"].learn_prob) for agent in naives]
-        prob_not_learn = np.prod(uptake_vector)
-        prob_learn = 1-prob_not_learn
-
-    elif not naives:
-        prob_learn=0
-
-    return prob_learn
-
-
 def extract_data(G,solution_list,knowledgable):
     frequencies = [solution_list.count(n) for n in range(solutions)]
     naives = [agent for agent in range(N) if G.nodes[agent]["data"].naive==True]
-
-    #prob_learn = calculate_probabilities(G,naives)
-    prob_learn = 0
 
     count_inefficient = frequencies[0]
     count_efficient = frequencies[1]
 
     num_solvers = len(knowledgable)
 
-    return count_inefficient, count_efficient, num_solvers, prob_learn
+    return count_inefficient, count_efficient, num_solvers
 
 def create_agent_csv():
     #writes header for main data
@@ -318,38 +300,18 @@ def create_agent_csv():
     fout.write("\n")
     fout.close()
 
-def write_agent_csv(G, sim_num, condition):
-    #writes header for main data
-    fout = open("agents_"+str(condition)+".csv","a")
-    for agent in range(N):
-        fout.write(str(sim_num) + "\t"+
-                   str(condition) + "\t" +
-                   str(G.nodes[agent]["data"].id)+ "\t" +
-                   str(G.nodes[agent]["data"].g_i)+ "\t" +
-                   str(G.nodes[agent]["data"].s_i)+"\t"+
-                   str(G.nodes[agent]["data"].inverse_temp)+"\t"+
-                   str(G.nodes[agent]["data"].conformity)+"\t"+
-                   str(G.nodes[agent]["data"].learn_prob)+"\t"+
-                    str(G.nodes[agent]["data"].P_mat[0])+"\t"+
-                  str(G.nodes[agent]["data"].P_mat[1]))
-        fout.write("\n")
-    fout.close()
-
-
 def create_csv():
     #writes header for main data
     fout=open("data_"+str(condition)+".csv","w")
     fout.write("sim\t" + "timestep\t"+ "condition\t"+
-          "pop_size\t"+ "g_i\t"+ "s_i\t"+ "inverse_temp\t" + "conformity\t" + "init_learn_prob\t"
-          "count_inefficient\t"+ "count_efficient\t"+ "num_solvers\t"+
-          "p_b_next")
+          "pop_size\t"+ "g_i\t"+ "s_i\t"+ "inverse_temp\t" + "conformity\t" +
+          "count_inefficient\t"+ "count_efficient\t"+ "num_solvers")
     fout.write("\n")
     fout.close()
 
 def write_csv(sim_num, timestep, condition,
               pop_size, g_i, s_i,
-              count_inefficient, count_efficient, num_solvers,
-               prob_learn):
+              count_inefficient, count_efficient, num_solvers):
 
     fout = open("data_"+str(condition)+".csv","a")
     fout.write(str(sim_num) + "\t"+
@@ -360,11 +322,9 @@ def write_csv(sim_num, timestep, condition,
                str(s_i)+"\t"+
                str(inverse_temp)+"\t"+
                str(conformity)+"\t"+
-               str(init_learn_prob)+"\t"+
                str(count_inefficient) +"\t" +
                str(count_efficient)+ "\t"+
-               str(num_solvers)+"\t"+
-               str(prob_learn))
+               str(num_solvers)
     fout.write("\n")
     fout.close()
 
@@ -376,7 +336,6 @@ def simulation(num_replicates):
         G = generateNetwork(graph_type)
         for timestep in range(t_steps):
             #print("**** the timestep {} starts".format(timestep))
-            #write_agent_csv(G,sim_num, condition)
             if timestep < 7:
                 payoffs=[10,0]
             else:
@@ -397,12 +356,12 @@ def simulation(num_replicates):
             obs_learning(G, frequencies)
             for agent in range(N):
                 G.nodes[agent]["data"].reset_solve_count()
-            count_inefficient, count_efficient, num_solvers, prob_learn = extract_data(G,solution_list,knowledgable)
+            count_inefficient, count_efficient, num_solvers = extract_data(G,solution_list,knowledgable)
             #if not all the agents know how to solve, check to see if a new agent can learn
             if len(knowledgable) < N:
                 knowledgable = state_switch(G, knowledgable)
             update_learn_prob(G)
-            write_csv(master_sim_no,timestep,condition,N,g_i,s_i,count_inefficient,count_efficient,num_solvers,prob_learn)
+            write_csv(master_sim_no,timestep,condition,N,g_i,s_i,count_inefficient,count_efficient,num_solvers)
             if (timestep+1)%7 == 0 and turnover==True:
                 turnover_event(G,timestep)
 
