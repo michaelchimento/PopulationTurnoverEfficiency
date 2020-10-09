@@ -8,7 +8,6 @@
 import numpy as np
 import networkx as nx
 import random
-import scipy.stats as stats
 import warnings
 from sys import argv
 warnings.filterwarnings('ignore')
@@ -36,11 +35,6 @@ payoffs = [10, 20]
 init_tutor = True
 init_obs = 10
 
-#if True, parameters are pulled from a truncated normal distribution, adding more variance to populations
-truncnorm_dist = False
-lower = .01
-upper = 1
-sigma = .01
 learning_function = str(argv[1]) if len(argv) > 1 else "negative"
 condition="turnover{}_learn_func{}".format(turnover,learning_function)
 
@@ -91,12 +85,6 @@ learning_hazard = [0.0607558419663852,
 if learning_function=="positive":
     learning_hazard = learning_hazard[::-1]
 
-def trunc_dist(mean, sigma, lower, upper):
-    value = stats.truncnorm.rvs(
-            (lower - mean) / sigma, (upper - mean) / sigma,
-            loc=mean,
-            scale=sigma, size=1)[0]
-    return value
 
 class agent:
     masterID = 0
@@ -144,12 +132,6 @@ class agent:
 
         self.id = masterID
         masterID += 1
-
-        if truncnorm_dist == True:
-            self.s_i = trunc_dist(s_i, sigma, lower, upper)
-            self.g_i = trunc_dist(g_i, sigma, lower, upper)
-            self.conformity = trunc_dist(conformity, 5, 1, 20)
-            self.inverse_temp = trunc_dist(inverse_temp, .1, 1, 3)
 
         elif truncnorm_dist == False:
             self.s_i = s_i
