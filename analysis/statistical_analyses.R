@@ -3,6 +3,8 @@
 library(lme4)
 library(lmerTest)
 library(tidyverse)
+library(rms)
+
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -20,7 +22,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   exp(fixef(m1))
 }
 
-# Results A: logistic GLMM (Table S2)
+# Results A: logistic GLMM quantifying selection for efficiency (Table S2)
 {
   load("../data/df_solves.Rda")
   df= df_solves %>% 
@@ -30,7 +32,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   m1 = glmer(efficient_solve ~ age + sex + exp_day_count*turnover + (1 | year / population), data=df, family=binomial(link = "logit"),verbose = 1)
 }
 
-# Results B: effect of experimental day on TTS between conditions (Table S3)
+# Results B: LMM effect of experimental day on TTS between conditions (Table S3)
 {
   load("../data/df_solves.Rda")
   df = df_solves %>%
@@ -60,7 +62,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   df_innov %>% group_by(condition) %>% summarize(mean(ind_day_count))
 }
 
-# Results D: behavioral conservatism (Table S4)
+# Results D: GLM analyzing whether experience of conformity predicts behavioral conservatism (Table S4)
 {
   load("../data/df_solves.Rda")
   #filter solvers which experienced both solutions
@@ -107,12 +109,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   df_innovators %>% filter(ID %in% df_switched$ID) #only 5 switched
 }
 
-# Results E: conditional probability of learning
+# Results E: estimates conditional probability of learning from experimental data
 {
   #the following code estimates the condition probability of learning from latency to learn data from the experiment
   #this was then fed into the agent based model as is, and also reversed (Fig. S5)
-  library(survival)
-  library(survminer)
   library(rms)
   
   load("../data/df_surv.Rda")
