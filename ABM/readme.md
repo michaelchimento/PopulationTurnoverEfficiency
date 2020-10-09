@@ -1,7 +1,7 @@
 ## Installation ##
 Installation can take several minutes if Python is already installed.
 The agent based model was written and tested on a Linux desktop computer (Pop!_OS 20.04 LTS) for Python 3.8. Please visit https://www.python.org/downloads/ for instructions on how to install Python on your system.
-Install required python3 dependencies by running the following command from the terminal:
+Install required python3 dependencies (numpy 1.19.0, networkx 2.4) by running the following command from the terminal:
 ```
 pip3 install numpy networkx
 ```
