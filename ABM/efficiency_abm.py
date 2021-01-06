@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-#run like so: python3 efficiency_abm.py ["negative","positive"]
+#run like so: python3 efficiency_abm.py ["negative","positive"] [True,False]
 #running with arg negative will run sims with original conditional probability of learning function inferred from experimental data
 #running with arg positive reverses this, used to test how important it was to the results
 
@@ -10,6 +10,7 @@ import networkx as nx
 import random
 import warnings
 from sys import argv
+import scipy.stats as stats
 warnings.filterwarnings('ignore')
 
 solutions = 2
@@ -18,29 +19,32 @@ graph_type = "complete" #sets network structure
 #median solves per day was like 98
 solves_per_day = 100
 turnover = eval(argv[2])
-num_turnover = 20
+num_turnover = 2
 N = 6
 
-#sets mean values for the parameters
-s_i = 0 #importance of social information
-g_i = 0 #updating weight for new payoff information
-conformity = 10 #conformity exponent
-inverse_temp = 1
-
 #payoffs for inefficient, efficient behavior
-payoffs = [10, 20]
+payoffs = [10,20]
 
 #provide populations with a tutor that has init_obs observations of the inefficient behavior
 init_tutor = True
-init_obs = 10
+init_obs = 100
 
 learning_function = str(argv[1]) if len(argv) > 1 else "negative"
-condition="turnover{}_learn_func{}".format(turnover,learning_function)
+condition="turnover{}_learn_func{}_payoffs{}-{}".format(turnover,learning_function,payoffs[0],payoffs[1])
 
 master_sim_no = 0
+#conformity_values = [1,5,10] #conformity exponent
+conformity_values = [5] #conformity exponent
 parameter_values = np.around(np.arange(0.1, 1.1, 0.2), 1)
-inverse_temp_values = np.around(np.arange(1,3.1,0.2), 1)
-num_replicates = 100
+inverse_temp_values = np.around(np.arange(1,6,1), 1)
+num_replicates = 500
+
+def trunc_dist(mean, sigma, lower, upper):
+    value = stats.truncnorm.rvs(
+            (lower - mean) / sigma, (upper - mean) / sigma,
+            loc=mean,
+            scale=sigma, size=1)[0]
+    return value
 
 #read learning hazard data
 learning_hazard = [0.0607558419663852,
@@ -84,10 +88,11 @@ learning_hazard = [0.0607558419663852,
 if learning_function=="positive":
     learning_hazard = learning_hazard[::-1]
 
-
+masterID = 0
 class agent:
-    masterID = 0
+
     def __init__(self):
+        global masterID
         '''
         social memory records frequencies of observations, which I've equated to the frequency
         of choice k among social cues at time t (or the  n_kt term in the S_kit equation). Does
@@ -132,11 +137,10 @@ class agent:
         self.id = masterID
         masterID += 1
 
-        elif truncnorm_dist == False:
-            self.s_i = s_i
-            self.g_i = g_i
-            self.conformity = conformity
-            self.inverse_temp = inverse_temp
+        self.s_i = s_i
+        self.g_i = g_i
+        self.conformity = conformity
+        self.inverse_temp = inverse_temp
 
         self.learn_prob = learning_hazard[0]
         self.days_exposure = 0
@@ -154,7 +158,8 @@ class agent:
 
     def A_kit_update(self, solution):
         #print("Agent{} A_kit_update(). old A_mat: {}".format(self.id, self.A_mat))
-        payoff = trunc_dist(payoffs[solution], 4, 0, 30)
+        payoff = payoffs[solution]
+        #payoff = trunc_dist(payoffs[solution], 4, 0, 30)
         #print("payoff {}".format(payoff))
         new_A_kit = (1 - self.g_i) * self.A_mat[solution] + self.g_i * payoff
         #print("new attraction score {}".format(new_A_kit))
@@ -211,10 +216,6 @@ class agent:
 def generateNetwork(graph_type):
     if graph_type == "complete":
         G = nx.complete_graph(N)
-    elif graph_type == "cycle":
-        G = nx.cycle_graph(N)
-    elif graph_type == "barabasi":
-        G = nx.barabasi_albert_graph(N, edge_parameter, seed=np.random.randint(1,1000))
 
     for i in range(N):
         G.add_node(i, data=agent())
@@ -292,20 +293,12 @@ def extract_data(G,solution_list,knowledgable):
 
     return count_inefficient, count_efficient, num_solvers
 
-def create_agent_csv():
-    #writes header for main data
-    fout=open("agents_"+str(condition)+".csv","w")
-    fout.write("sim\t" + "condition\t"+ "agent\t"+
-             "g_i\t"+ "s_i\t"+ "inverse_temp\t" + "conformity\t" + "learn_prob\t"+ "p_kit0\t"+"p_kit1")
-    fout.write("\n")
-    fout.close()
-
 def create_csv():
     #writes header for main data
     fout=open("data_"+str(condition)+".csv","w")
     fout.write("sim\t" + "timestep\t"+ "condition\t"+
           "pop_size\t"+ "g_i\t"+ "s_i\t"+ "inverse_temp\t" + "conformity\t" +
-          "count_inefficient\t"+ "count_efficient\t"+ "num_solvers")
+          "count_inefficient\t"+ "count_efficient\t"+ "num_solvers\t"+"payoffs")
     fout.write("\n")
     fout.close()
 
@@ -324,7 +317,8 @@ def write_csv(sim_num, timestep, condition,
                str(conformity)+"\t"+
                str(count_inefficient) +"\t" +
                str(count_efficient)+ "\t"+
-               str(num_solvers)
+               str(num_solvers)+ "\t"+
+               str(payoffs))
     fout.write("\n")
     fout.close()
 
@@ -344,7 +338,9 @@ def simulation(num_replicates):
             solution_list = []
             solver_list = []
             knowledgable = [agent for agent in range(N) if G.nodes[agent]["data"].naive == False ]
-            #print(knowledgable)
+            if len(knowledgable)==0:
+                print("behavior is extinct")
+                break
             for interactions in range(solves_per_day*len(knowledgable)):
                 solver = choose_solver(G, knowledgable)
                 solution = game(G, solver)
@@ -369,13 +365,11 @@ def simulation(num_replicates):
 
 if __name__ == "__main__":
     create_csv()
-    create_agent_csv()
-
-    for s_i_param in parameter_values:
-            for g_i_param in parameter_values:
-                for inverse_temp in inverse_temp_values:
-                    inverse_temp = inverse_temp
-                    s_i = s_i_param
-                    g_i = g_i_param
-                    print("s_i{} g_i{}".format(s_i,g_i))
-                    simulation(num_replicates)
+    for conformity in conformity_values:
+        for s_i_param in parameter_values:
+                for g_i_param in parameter_values:
+                    for inverse_temp in inverse_temp_values:
+                        s_i = s_i_param
+                        g_i = g_i_param
+                        print("payoffs {} conformity {} inverse_temp {} s_i{} g_i{}".format(payoffs,conformity,inverse_temp,s_i,g_i))
+                        simulation(num_replicates)
