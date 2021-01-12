@@ -7,8 +7,8 @@ library(rms)
 library(stargazer)
 library(scales)
 
-#options(scipen=5)
-#options(digits=3)
+options(scipen=5)
+options(digits=5)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Results: Summary statistics ####
@@ -51,6 +51,9 @@ df = df_solves %>% ungroup() %>% filter(solver==1,tutor==0) %>% group_by(ID,exp_
 df = df %>% group_by(ID) %>% summarise(mean_solves_day = mean(total))
 mean(df$mean_solves_day)
 
+
+
+
 # Results A: LMM Individual improvements with experience (Table S1a) ####
 load("../data/df_solves.Rda")
 #individual level improvements over time
@@ -65,19 +68,25 @@ df$Event = relevel(df$Event, "inefficient")
 #df = df %>% group_by(population,ID,Event) %>% mutate(scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype))
 df = df %>% mutate(scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype))
 
+m0 = lmer(log(solve_speed+1) ~ age + sex + scaled_ind_solve_count_bytype*Event + (1 | year/population/ID),data=df)
 m1 = lmer(log(solve_speed+1) ~ scaled_ind_solve_count_bytype*Event + (1 | year/population/ID),data=df)
-summary(m1)
-exp(fixef(m1))
-class(m1) <- "lmerMod"
 
-# Results B: LMM effect of experimental day on TTS between conditions (Table S1b) ####
+#compare models
+anova(m0,m1) #removal of age and sex doesn't significantly improve the model
+
+summary(m0)
+exp(fixef(m0))
+class(m0) <- "lmerMod"
+
+
+# LMM effect of experimental day on TTS between conditions (Table S1b) ####
 load("../data/df_solves.Rda")
 df = df_solves %>%
   ungroup() %>%
   filter(solver==1,tutor==0,!is.na(solve_speed),solve_speed<=60) %>% mutate(year=as.factor(year), exp_day_count = exp_day_count+5) %>% droplevels()
 df = df %>% mutate(scaled_exp_day_count = rescale(exp_day_count,to = c(-1, 1)),scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype),log_solve_speed=log(solve_speed+1))
 
-m2 = lmer(log_solve_speed ~ age + sex + scaled_exp_day_count*condition + (1| year/population/ID), data=df)
+m2 = lmer(log_solve_speed ~ age + sex + scaled_exp_day_count*condition + (1 | Event) + (1| year/population/ID), data=df)
 
 summary(m2)
 exp(fixef(m2))
@@ -89,19 +98,22 @@ df$condition = relevel(df$condition,"turnover")
 x=wilcox.test(formula=solve_speed ~ condition, alternative="l", data=df %>% filter(week=="w5"))
 print(x)
 
-# Results A: logistic GLMM quantifying selection for efficiency (Table S1c) ####
+
+# Logistic GLMM quantifying selection for efficiency (Table S1c) ####
 load("../data/df_solves.Rda")
 df= df_solves %>%
   mutate(exp_day_count=exp_day_count-6) %>%  #subtract 6 days so that 0 is the first day the efficient soln. is unblocked
   dplyr::filter(solver==1,exp_day_count >=0, !is.na(Event), population!= 13)
 df = df %>% mutate(efficient_solve = ifelse(Event=="efficient",1,0), turnover = ifelse(condition=="turnover",1,0)) %>% ungroup() %>% select(population,ID,age,sex,efficient_solve,condition, exp_day_count, year)
 m3 = glmer(efficient_solve ~ age + sex + exp_day_count*condition + (1 | year / population), data=df, family=binomial(link = "logit"),verbose = 1)
-stargazer(m1,covariate.labels = c("age (adult)","sex (male)","experimental day","condition (turnover)","experimental day:condition (turnover)","intercept"),dep.var.labels = c("solution (efficient)"))
+
+summary(m3)
+
 
 # Table S1 ####
-stargazer(m1,m2,m3, dep.var.labels = c("log(TTS+1)","log(TTS+1)","efficient solution"),covariate.labels = c("solution index (scaled)", "solution (efficient)", "solution index (scaled):solution (efficient)", "age (adult)","sex (male)","experimental day (scaled)","experimental day","condition (turnover)","experimental day (scaled):condition (turnover)","experimental day:condition (turnover)","intercept"),title="Individual improvement with experience; Selection for efficient solution between conditions; LMM: Improvement over course of experiment", font.size = "small",report = "vc*t")
+stargazer(m0,m2,m3, dep.var.labels = c("log(TTS+1)","log(TTS+1)","efficient solution"), covariate.labels = c("age (adult)","sex (male)","solution index (scaled)", "solution (efficient)", "solution index (scaled):solution (efficient)", "experimental day (scaled)","experimental day","condition (turnover)","experimental day (scaled):condition (turnover)","experimental day:condition (turnover)","intercept"), title="Individual improvement with experience; Selection for efficient solution between conditions; LMM: Improvement over course of experiment", font.size = "small",report="vcstp*",single.row=T)
 
-# Results C: GLM comparison of innovation timing (Table S2) ####
+# GLM comparison of innovation timing (Table S2) ####
 load("../data/df_solves.Rda")
 df_innov=df_solves %>% filter(innovation==1) %>% ungroup()%>% mutate(exp_day_count=exp_day_count+5)
 summary(df_innov$solve_day_count)
@@ -125,10 +137,11 @@ m2 = glm(ind_day_count ~ age + sex + condition, data=df_innov)
 #experimental day count
 df_innov %>% group_by(condition) %>% summarise(mean(exp_day_count))
 m3 = glm(exp_day_count ~ age + sex + condition, data=df_innov)
-stargazer(m1,m2,m3,covariate.labels = c("age (adult)","sex (male)","condition (static)","intercept"),dep.var.labels = c("days solving","days exposure","experimental day"),title="GLM: Differences in innovation timing between conditions",report = "vc*t")
+stargazer(m1,m2,m3,covariate.labels = c("age (adult)","sex (male)","condition (static)","intercept"),dep.var.labels = c("days solving","days exposure","experimental day"),title="GLM: Differences in innovation timing between conditions",report="vcstp*",single.row=T)
 
 
-# Results D: GLM analyzing whether experience of conformity predicts behavioral conservatism (Table S3) ####
+
+# GLM analyzing whether experience of conformity predicts behavioral conservatism (Table S3) ####
 load("../data/df_solves.Rda")
 #filter solvers which experienced both solutions
 df_solves = df_solves %>% filter(total_count_efficient>0 & total_count_inefficient > 0, solver==1)
@@ -159,7 +172,7 @@ df_final = droplevels(df_end_ID)
 #model what predicts failure to switch
 m1 = glmer(failed_switch ~ solve_day_count + soc_prop_inefficient + (1|year/population), data=df_final, family=binomial(link = "logit"))
 summary(m1)
-stargazer(m1)
+stargazer(m1, covariate.labels = c("days experience","socially observed inefficient","intercept"),dep.var.labels = c("failure to adopt"),title="GLMM: Predictors of failure to adopt efficient solution",report="vcstp*",single.row=T)
 
 #check how many innovators switched
 load("../data/df_solves.Rda")
@@ -167,30 +180,28 @@ df_innovators = df_solves %>% group_by(population,ID) %>% summarise(innovator=su
 df_switched = df_end_ID %>% filter(switched==1)
 df_innovators %>% filter(ID %in% df_switched$ID) #only 5 switched
 
-# SI: does experiencing the blocked door inhibit sampling of both solutions (Table S4) ####
+
+# Does learning during the diffusion period inhibit sampling of both solutions (Table S4) ####
 load("../data/df_solves.Rda")
 #individual level improvements over time
 df = df_solves %>%
   ungroup() %>% mutate(year=as.factor(year)) %>% droplevels()
 
-df = df %>% filter(W1==1, solver==1)
+df = df %>% filter(solver==1)
 
 summary(df)
-df1 = df %>% mutate(blocked=ifelse(day_first_solve<7,1,0),
-                    efficient_solve = ifelse(Event=="efficient",1,0),
-                    sampler = ifelse((total_count_efficient>0 & total_count_inefficient > 0),1,0),
-                    maj_efficient=ifelse(total_count_efficient>total_count_inefficient,1,0))
+df1 = df %>% mutate(learned_diffusion=ifelse(day_first_solve<7,1,0),
+                    sampler = ifelse((total_count_efficient>0 & total_count_inefficient > 0),1,0))
 
 df1 = df1 %>% group_by(population,ID) %>% slice_head(n=1)
 
-m1 = glmer(sampler ~ blocked + (1|population),data=df1, family="binomial")
+m1 = glmer(sampler ~ learned_diffusion + (1|population),data=df1, family="binomial")
 summary(m1)
-stargazer(m1)
+stargazer(m1, covariate.labels = c("learned during diffusion","intercept"),dep.var.labels = c("sampler"),title="GLMM: Did learning during the diffusion period affect sampling?",report="vcstp*",single.row=T)
 
 # Results E: estimates conditional probability of learning from experimental data ####
 #the following code estimates the condition probability of learning from latency to learn data from the experiment
 #this was then fed into the agent based model as is, and also reversed (Fig. S5)
-library(rms)
 
 load("../data/df_surv.Rda")
 summary(df)
