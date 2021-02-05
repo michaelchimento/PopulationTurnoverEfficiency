@@ -17,16 +17,7 @@ puzzle = rasterGrob(puzzle,height=1)
 
 load("../data/df_solves.Rda")
 
-#subset solutions produced by each solver into first quartile (inexperienced) and final 3 quartiles (experienced)
-df_inex = df_solves %>% filter(solver==1, tutor==0, solve_speed < 60) %>%
-  group_by(population,ID,Event) %>% arrange(full_timestamp) %>%
-  slice_head(prop=0.25) %>% mutate(level="inexperienced")
-df_ex = df_solves %>% filter(solver==1, tutor==0, solve_speed < 60) %>%
-  group_by(population,ID,Event) %>% arrange(full_timestamp) %>%
-  slice_tail(prop=0.75) %>% mutate(level="experienced")
-
-df = rbind(df_inex,df_ex)
-summary(df)
+df = df_solves %>% filter(solver==1, tutor==0, solve_speed < 60) %>% mutate(scaled_solveindex = scale(ind_solve_count_bytype)) %>% filter(!is.na(scaled_solveindex))
 #summary
 df %>% group_by(Event) %>% summarise(length(unique(ID)))
 df %>% group_by(Event) %>% summarise(length(Event))
@@ -34,22 +25,19 @@ df %>% group_by(Event) %>% summarise(mean(solve_speed))
 
 #make plot
 solution_colors = c("#ff5959","#03039e")
-df$level = relevel(as.factor(df$level),"inexperienced")
-p_speed = ggplot(df, aes(x=Event, y=solve_speed))+
-  stat_summary(aes(color=Event,shape=as.factor(level)),size=1)+
-  stat_summary(aes(color=Event,group=as.factor(level)), geom = "errorbar")+
-  labs(y = "Time to solve (seconds)", x = "Solution type")+
-  scale_shape_manual(values = c(16, 21),name="")+
+
+p_speed = ggplot(df,aes(x=scaled_solveindex,y=solve_speed))+
+  stat_summary_bin(aes(color=Event),bins=5,size=1,show.legend = F,breaks=c(-2.5,-1.5,-.5,.5,1.5,2.5))+
+  stat_summary_bin(aes(color=Event),bins=5,size=1,show.legend = F,breaks=c(-2.5,-1.5,-.5,.5,1.5,2.5),geom="errorbar")+
+  labs(y = "Time to solve (seconds)", x = "Scaled experience")+
   scale_color_manual(values=solution_colors,guide=F)+
-  coord_cartesian(ylim=c(0,3))+
   scale_y_continuous(position = "right")+
   theme_bw()+
   theme(legend.position = "top",text = element_text(size = 15))
 
 ggarrange(puzzle,pinpoint,p_speed,labels = c("A","B","C"),
-          font.label = list(color="black"),ncol=3,widths=c(1.2,1.5,.7))
+          font.label = list(color="black"),ncol=3,widths=c(1.2,1.4,.8))
 ggsave("../images/fig1.png",width=17.8, height = 5,limitsize = TRUE, scale=2.5, units="cm")
-
 
 # Fig 2 ####
 load("../data/df_solves.Rda")
