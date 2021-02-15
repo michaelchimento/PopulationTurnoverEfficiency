@@ -1,5 +1,5 @@
 # Population turnover facilitates cultural selection for efficiency
-Repository for data, analyses and code for the manuscript titled "Population turnover facilitates selection for efficiency", by Michael Chimento, Gustavo Alarcon-Nieto and Lucy Aplin.
+Repository for data, analyses and code for the manuscript titled "Population turnover facilitates selection for efficiency", by Michael Chimento, Gustavo Alarcon-Nieto and Lucy Aplin. Included is an agent based model to verify the verbal hypothesis of the paper.
 
 [![DOI](https://zenodo.org/badge/298310660.svg)](https://zenodo.org/badge/latestdoi/298310660)
 
@@ -11,7 +11,7 @@ This repository contains all relevant code and data for this manuscript.
 
 Directory  | Description
 ------------- | -------------
-ABM  | Python code needed to run the agent based model
+ABM  | Python code needed to run the agent based model. This model was not included in the final manuscript for concision, but supports the results.
 analysis | R code used to run the statistical analyses and create figures
 data | Dataframes used to run the statistical analyses and create figures
 images | output of figure code is exported here
