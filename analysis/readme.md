@@ -1,7 +1,7 @@
 All analysis was conducted using R-Studio (version 1.1.456; R version 3.5.1)[1,2] and the packages tidyverse (1.3.0)[3], lme4 (1.1-23)[4], lmerTest (3.1-2)[5], rms (6.0-0)[6], and ggpubr (0.3.0)[7].
 
 # Instructions
-Each block of code is self-contained, and can be run as-is in R-Studio. Data is imported from the "data" directory of this repository.
+Each block of code is self-contained, and can be run as-is in R-Studio. Data is imported from the "data" directory of this repository one level up. ABM_stats_figures.R contains code to reproduce visualizations of the agent based model. The model broadly shows that turnover increases the parameter space in which efficient behaviors are selected for, across a wide range of learner types.
 
 # References
 1. R Core Team (2018). R: A language and environment for statistical computing.R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
