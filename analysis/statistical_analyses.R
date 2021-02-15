@@ -65,7 +65,6 @@ df = df_solves %>%
   ungroup() %>%
   filter(solver==1, tutor==0,!is.na(solve_speed),solve_speed<=60) %>% mutate(year=as.factor(year)) %>% droplevels()
 df$Event = relevel(df$Event, "inefficient")
-#df = df %>% group_by(population,ID,Event) %>% mutate(scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype))
 df = df %>% mutate(scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype))
 
 m0 = lmer(log(solve_speed+1) ~ age + sex + scaled_ind_solve_count_bytype*Event + (1 | year/population/ID),data=df)
@@ -73,9 +72,6 @@ m1 = lmer(log(solve_speed+1) ~ scaled_ind_solve_count_bytype*Event + (1 | year/p
 
 #compare models
 anova(m0,m1) #removal of age and sex doesn't significantly improve the model
-
-summary(m0)
-exp(fixef(m0))
 class(m0) <- "lmerMod"
 
 
@@ -87,16 +83,7 @@ df = df_solves %>%
 df = df %>% mutate(scaled_exp_day_count = rescale(exp_day_count,to = c(-1, 1)),scaled_ind_solve_count_bytype = scale(ind_solve_count_bytype),log_solve_speed=log(solve_speed+1))
 
 m2 = lmer(log_solve_speed ~ age + sex + scaled_exp_day_count*condition + (1 | Event) + (1| year/population/ID), data=df)
-
-summary(m2)
-exp(fixef(m2))
 class(m2) <- "lmerMod"
-
-#Wilcox test of solve speeds in final week
-df$condition = relevel(df$condition,"turnover")
-
-x=wilcox.test(formula=solve_speed ~ condition, alternative="l", data=df %>% filter(week=="w5"))
-print(x)
 
 
 # Logistic GLMM quantifying selection for efficiency (Table S1c) ####
@@ -106,9 +93,6 @@ df= df_solves %>%
   dplyr::filter(solver==1,exp_day_count >=0, !is.na(Event), population!= 13)
 df = df %>% mutate(efficient_solve = ifelse(Event=="efficient",1,0), turnover = ifelse(condition=="turnover",1,0)) %>% ungroup() %>% select(population,ID,age,sex,efficient_solve,condition, exp_day_count, year)
 m3 = glmer(efficient_solve ~ age + sex + exp_day_count*condition + (1 | year / population), data=df, family=binomial(link = "logit"),verbose = 1)
-
-summary(m3)
-
 
 # Table S1 ####
 stargazer(m0,m2,m3, dep.var.labels = c("log(TTS+1)","log(TTS+1)","efficient solution"), covariate.labels = c("age (adult)","sex (male)","solution index (scaled)", "solution (efficient)", "solution index (scaled):solution (efficient)", "experimental day (scaled)","experimental day","condition (turnover)","experimental day (scaled):condition (turnover)","experimental day:condition (turnover)","intercept"), title="Individual improvement with experience; Selection for efficient solution between conditions; LMM: Improvement over course of experiment", font.size = "small",report="vcstp*",single.row=T)
@@ -189,34 +173,10 @@ df = df_solves %>%
 
 df = df %>% filter(solver==1)
 
-summary(df)
 df1 = df %>% mutate(learned_diffusion=ifelse(day_first_solve<7,1,0),
                     sampler = ifelse((total_count_efficient>0 & total_count_inefficient > 0),1,0))
 
 df1 = df1 %>% group_by(population,ID) %>% slice_head(n=1)
 
 m1 = glmer(sampler ~ learned_diffusion + (1|population),data=df1, family="binomial")
-summary(m1)
 stargazer(m1, covariate.labels = c("learned during diffusion","intercept"),dep.var.labels = c("sampler"),title="GLMM: Did learning during the diffusion period affect sampling?",report="vcstp*",single.row=T)
-
-# Results E: estimates conditional probability of learning from experimental data ####
-#the following code estimates the condition probability of learning from latency to learn data from the experiment
-#this was then fed into the agent based model as is, and also reversed (Fig. S5)
-
-load("../data/df_surv.Rda")
-summary(df)
-df = df_surv
-#cox-ph estimates hazard ratios without estimating a baseline hazard function, semiparametric. to get hazard function, we need full parametric
-dd = datadist(df)
-options(datadist='dd')
-fit.parametric = psm(Surv(latency_to_solve + 1, censor) ~ 1, data=df, dist="lognormal")
-fit.parametric2 = psm(Surv(latency_to_solve + 1, censor) ~ 1, data=df, dist="weibull")
-fit.parametric$loglik
-fit.parametric2$loglik
-#lognormal has higher loglik
-estimates = survest(fit.parametric, what="survival", times = c(1:40))
-learn_probs = cbind(estimates$time, estimates$surv)
-learn_probs = as.data.frame(learn_probs)
-#calculate conditional probability of failure
-learn_probs = learn_probs %>% mutate(cond_prob_fail = (V2 - lead(V2)) / V2)
-print(learn_probs)
