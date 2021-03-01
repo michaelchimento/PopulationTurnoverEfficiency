@@ -32,6 +32,7 @@ p_speed = ggplot(df,aes(x=scaled_solveindex,y=solve_speed))+
   labs(y = "Time to solve (seconds)", x = "Scaled experience")+
   scale_color_manual(values=solution_colors,guide=F)+
   scale_y_continuous(position = "right")+
+  coord_cartesian(ylim = c(0, 3))+
   theme_bw()+
   theme(legend.position = "top",text = element_text(size = 15))
 
