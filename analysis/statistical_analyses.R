@@ -12,6 +12,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Results: Summary statistics ####
 load("../data/df_solves.Rda")
+
 #number of solutions produced OVERALL
 df_solves %>% ungroup() %>% filter(solver==1) %>% summarise(n())
 
@@ -50,7 +51,10 @@ df = df_solves %>% ungroup() %>% filter(solver==1,tutor==0) %>% group_by(ID,exp_
 df = df %>% group_by(ID) %>% summarise(mean_solves_day = mean(total))
 mean(df$mean_solves_day)
 
-
+#how many naive birds learned during the diffusion period
+df_solves %>% ungroup() %>% filter(solver==1,tutor==0,W1==1) %>% group_by(ID) %>% distinct(ID)
+#how many naive birds learned after the diffusion period
+df_solves %>% ungroup() %>% filter(solver==1,tutor==0,W1==0) %>% group_by(ID) %>% distinct(ID)
 
 
 # Results A: LMM Individual improvements with experience (Table S1a) ####
