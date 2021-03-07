@@ -1,7 +1,6 @@
 library(tidyverse)
 library(ggpubr)
 library(ggstance)
-library(plotly)
 library(magick)
 library(grid)
 library(zoo)
@@ -9,7 +8,7 @@ library(zoo)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Fig 1 ####
-pinpoint = image_read("../images/pinpoint_example_puzzle_2.jpg")
+pinpoint = image_read("../images/pinpoint_example_puzzle.jpg")
 pinpoint = image_convert(pinpoint,"png")
 pinpoint = rasterGrob(pinpoint,height=1)
 puzzle = image_read("../images/puzzle_img.png")

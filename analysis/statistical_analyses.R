@@ -3,7 +3,6 @@
 library(lme4)
 library(lmerTest)
 library(tidyverse)
-library(rms)
 library(stargazer)
 library(scales)
 
@@ -97,7 +96,32 @@ m3 = glmer(efficient_solve ~ age + sex + exp_day_count*condition + (1 | year / p
 # Table S1 ####
 stargazer(m0,m2,m3, dep.var.labels = c("log(TTS+1)","log(TTS+1)","efficient solution"), covariate.labels = c("age (adult)","sex (male)","solution index (scaled)", "solution (efficient)", "solution index (scaled):solution (efficient)", "experimental day (scaled)","experimental day","condition (turnover)","experimental day (scaled):condition (turnover)","experimental day:condition (turnover)","intercept"), title="Individual improvement with experience; Selection for efficient solution between conditions; LMM: Improvement over course of experiment", font.size = "small",report="vcstp*",single.row=T)
 
-# GLM comparison of innovation timing (Table S2) ####
+
+# Logistic GLMM asking whether immigrants linearly sampled social information (Table S2) ####
+load("../data/df_solves.Rda")
+df_solves = df_solves %>% mutate(exp_day_count = exp_day_count+5) %>% filter(solver==1,tutor==0,exp_day_count>=12) %>% ungroup()
+
+df_pops = df_solves %>% group_by(condition,population,exp_day_count,Event) %>% summarise(count = n()) %>% pivot_wider(names_from = Event, values_from=count, names_prefix="pop_", values_fill=0)
+
+#create dataframe of individuals with count of solutions by type each day
+df_ind = df_solves %>% group_by(condition,population,W1,ID,exp_day_count,Event) %>% summarise(count = n()) %>% pivot_wider(names_from = Event, values_from=count, names_prefix="ind_", values_fill=0) %>% mutate(ind_prop_efficient = ind_efficient/(ind_inefficient+ind_efficient),W1=as.factor(W1))
+
+df_final = left_join(df_pops, df_ind)
+summary(df_final)
+#subtract 2 values to get count of socially observed solutions on first day of producing efficient solution
+df_final = df_final %>% mutate(soc_efficient = pop_efficient-ind_efficient, soc_inefficient= pop_inefficient-ind_inefficient)
+
+#create proportion
+df_final = df_final %>% mutate(soc_prop_efficient = soc_efficient/(soc_inefficient+soc_efficient))
+df_final = df_final %>% mutate(soc_prop_efficient = if_else(is.nan(soc_prop_efficient), 0, soc_prop_efficient))
+df_final = df_final %>% mutate(resident=ifelse(W1==1,TRUE,FALSE))
+
+m1 = lmer(ind_prop_efficient ~ soc_prop_efficient*resident + (1 | population / ID), data=df_final,verbose = 1)
+class(m1) <- "lmerMod"
+
+stargazer(m1,covariate.labels = c("efficient social information","resident","efficient social information : resident","intercept"),dep.var.labels = c("daily proportion of efficient solns."),title="LMM: Do immigrants amplify social information?",report="vcstp*",single.row=T)
+
+# GLM comparison of innovation timing (Table S3) ####
 load("../data/df_solves.Rda")
 df_innov=df_solves %>% filter(innovation==1) %>% ungroup()%>% mutate(exp_day_count=exp_day_count+5)
 summary(df_innov$solve_day_count)
@@ -125,7 +149,7 @@ stargazer(m1,m2,m3,covariate.labels = c("age (adult)","sex (male)","condition (s
 
 
 
-# GLM analyzing whether experience of conformity predicts behavioral conservatism (Table S3) ####
+# GLM asking whether experience of conformity predicts behavioral conservatism (Table S4) ####
 load("../data/df_solves.Rda")
 #filter solvers which experienced both solutions
 df_solves = df_solves %>% filter(total_count_efficient>0 & total_count_inefficient > 0, solver==1)
@@ -165,7 +189,7 @@ df_switched = df_end_ID %>% filter(switched==1)
 df_innovators %>% filter(ID %in% df_switched$ID) #only 5 switched
 
 
-# Does learning during the diffusion period inhibit sampling of both solutions (Table S4) ####
+# Does learning during the diffusion period inhibit sampling of both solutions (Table S5) ####
 load("../data/df_solves.Rda")
 #individual level improvements over time
 df = df_solves %>%

@@ -1,13 +1,26 @@
 library(tidyverse)
 library(ggpubr)
 library(ggstance)
-library(plotly)
 library(magick)
 library(grid)
-
+library(survival)
+library(survminer)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-#SI fig 1, overview of all populations ####
+#Fig. S1, survival analysis of differences between learners ####
+load(file="../data/df_surv.Rda")
+df_surv = df_surv %>% mutate(age=ifelse(age==5,"juv.","ad"))
+
+#check for differences between age, sex
+fit = survfit(Surv(latency_to_solve, censor) ~ age + sex + 1, data=df_surv)
+ggsurvplot(fit, data = df_surv, pval = TRUE, conf.int = T)
+ggsave("../images/FigS3.png",width=10,height=10,units="cm",scale=2)
+
+fit = survfit(Surv(latency_to_solve, censor) ~ condition + 1, data=df)
+summary(fit)
+ggsurvplot(fit, data = df, pval = TRUE, conf.int = T)
+ggsave("../images/condition_survplot.png",width=10,height=10,units="cm",scale=1)
+#Fig. S2, overview of all populations ####
 load("../data/df_solves.Rda")
 
 df = df_solves %>% filter(solver==1) %>% mutate(innovation=ifelse(is.na(innovation),0,innovation), exp_day_count=exp_day_count+5)
@@ -45,7 +58,7 @@ ggplot(df1,aes(x=exp_day_count,y=as.factor(ID)))+
   theme(text=element_text(size=16))
 ggsave("../images/SI_pop_overview.png",width=17.8,height=12, units="cm",limitsize = FALSE, scale=2)
 
-#SI fig 2, innovation timing ####
+#Fig. S3, innovation timing between conditions ####
 load("../data/df_solves.Rda")
 df_innov=df_solves %>% filter(innovation==1) %>% ungroup() %>% mutate(exp_day_count=exp_day_count+5)
 df_innov$condition = relevel(df_innov$condition,"turnover")
@@ -83,5 +96,3 @@ p3 = ggplot(df_innov,aes(y=exp_day_count,x=condition))+
 
 ggarrange(p1,p2,p3,labels="AUTO",ncol=3)
 ggsave("../images/SI_innovation_multipanel.png",width=17.8,height=6, units="cm",limitsize = FALSE, scale=1.5)
-
-
