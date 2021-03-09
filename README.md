@@ -11,7 +11,7 @@ This repository contains all relevant code and data for this manuscript.
 
 Directory  | Description
 ------------- | -------------
-ABM  | Python code needed to run the agent based model. This model was not included in the final manuscript for concision, but supports the results.
+ABM  | Python code needed to run the agent based model. This model was a verification of our verbal hypothesis. It not included in the final manuscript for space constraints, but supports the results.
 analysis | R code used to run the statistical analyses and create figures
 data | Dataframes used to run the statistical analyses and create figures
 images | output of figure code is exported here
