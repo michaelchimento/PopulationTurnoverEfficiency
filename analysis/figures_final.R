@@ -36,8 +36,8 @@ p_speed = ggplot(df,aes(x=scaled_solveindex,y=solve_speed))+
   theme(legend.position = "top",text = element_text(size = 15))
 
 ggarrange(puzzle,pinpoint,p_speed,labels = c("A","B","C"),
-          font.label = list(color="black"),ncol=3,widths=c(1.2,1.4,.8))
-ggsave("../images/fig1.png",width=17.8, height = 5,limitsize = TRUE, scale=2.5, units="cm")
+          font.label = list(color="black"),ncol=3,widths=c(1.2,1.4,.8),hjust=c(-.5,-.5,1.5))
+ggsave("../images/fig1.pdf",width=17.4, height = 5,limitsize = TRUE, scale=2.5, units="cm")
 
 # Fig 2 ####
 load("../data/df_solves.Rda")
@@ -62,10 +62,9 @@ p1 = ggplot(df2 %>% filter(condition=="static"),aes(x=exp_day_count,y=as.factor(
   scale_size(name="Frequency",range=c(2,5))+
   geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5,fill="grey", alpha=.1, show.legend=F) +
   geom_point(data = df2 %>% subset(innov==0),aes(color=Event,size=freq),position=position_jitter(w = 0, h = 0.3),alpha=0.4)+
-  geom_point(data = df2 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1)+
-  geom_point(data = df2 %>% subset(innov==1),shape="circle",color="#ff5959",size=3,alpha=1)+
+  geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1)+
   coord_cartesian(xlim=c(0,39))+
-  scale_y_discrete(limits = levels(as.factor(df2$population)))+
+  scale_y_discrete(limits = levels(as.factor(df2$population)),labels=c(1,2,3,4,5,6,7,8,9))+
   labs(x="",y="Static population ID")+
   theme_bw()+
   theme(text=element_text(size=16))
@@ -79,10 +78,9 @@ p2 = ggplot(df2 %>% filter(condition=="turnover"),aes(x=exp_day_count,y=as.facto
   scale_size(name="Frequency",range=c(2,5))+
   geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5, fill="gray", alpha=0.5) +
   geom_point(data = df2 %>% subset(innov==0),aes(color=Event,size=freq),position=position_jitter(w = 0, h = 0.3),alpha=0.4)+
-  geom_point(data = df2 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1)+
-  geom_point(data = df2 %>% subset(innov==1),shape="circle",color="#ff5959",size=3,alpha=1)+
+  geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1)+
   coord_cartesian(xlim=c(0,39))+
-  scale_y_discrete(limits = levels(df2$population))+
+  scale_y_discrete(limits = levels(df2$population),labels=c(10,11,12,13,14,15,16,17,18))+
   labs(x="",y="Turnover population ID")+
   geom_vline(xintercept = c(11.5,18.5,25.5,32.5),linetype='dashed',size=1)+
   theme_bw()+
@@ -106,21 +104,6 @@ df = df %>% ungroup() %>% mutate(ID = fct_reorder(ID, desc(date_in_aviary)))
 df1 = df %>% filter(Event %in% c("efficient","inefficient")) %>% mutate(population=as.factor(population))
 
 solution_cols = c("#ff5959","#03039e")
-
-#all plotted together
-ggplot(df1,aes(x=exp_day_count,y=as.factor(ID)))+
-  facet_wrap(condition~population, scales="free")+
-  scale_color_manual(values=rev(solution_cols),guide=F)+
-  scale_size(name="Frequency",range=c(2,5),guide=F)+
-  geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.8),alpha=0.9)+
-  geom_point(data = df1 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1,position=position_nudge(x = 0, y = .2))+
-  coord_cartesian(xlim=c(0,39))+
-  #scale_y_discrete(limits = rev(levels(df1$population)))+
-  labs(x="Experimental day",y="Bird ID")+
-  geom_vline(xintercept = c(11.5,18.5,25.5,32.5),linetype='dashed',size=1)+
-  theme_bw()+
-  theme(text=element_text(size=16))
-
 
 #summary
 df2 = df1 %>% filter(population==6)
@@ -146,13 +129,13 @@ p3 = ggplot(df2,aes(x=exp_day_count,y=as.factor(ID)))+
   scale_color_manual(values=rev(solution_cols),guide=F)+
   scale_size(name="Frequency",range=c(2,5),guide=F)+
   geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.8),alpha=0.9)+
-  geom_point(data = df2 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1,position=position_nudge(x = 0, y = .2))+
+  geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1,position=position_nudge(x = 0, y = .275))+
   coord_cartesian(xlim=c(0,39))+
-  #scale_y_discrete(limits = rev(levels(df1$population)))+
+  scale_y_discrete(labels=c("m","l","k","j","i","h","g","f","e"))+
   labs(x="Experimental day",y="Bird ID")+
   geom_vline(xintercept = c(11.5,18.5,25.5,32.5),linetype='dashed',size=1)+
   theme_bw()+
-  theme(text=element_text(size=16), axis.text.y=element_text(angle = 45, hjust = 1,colour = color_vector))
+  theme(text=element_text(size=16), axis.text.y=element_text(hjust = 1,colour = color_vector))
 
 df2 = df1 %>% filter(population==8)
 df2 %>% summarise(length(unique(ID))) #birds
@@ -160,22 +143,23 @@ df2 %>% summarise(sum(freq)) #29801 solutions
 df_tutorcolor = df2 %>% group_by(ID) %>% slice(head=1)
 color_vector <- ifelse(df_tutorcolor$tutor == 1, "gold", "black")
 p4 = ggplot(df2,aes(x=exp_day_count,y=as.factor(ID)))+
-  geom_rect(ymin=0, ymax=18, xmin=-5, xmax=6.5, fill="gray", alpha=0.5) +
+  geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5, fill="gray", alpha=0.5) +
   geom_segment(y="E405A",yend="E405A",x=0,xend=39,color="black",size=1)+
   geom_segment(y="E3FBE",yend="E3FBE",x=0,xend=39,color="black",size=1)+
   geom_segment(y="DACDC",yend="DACDC",x=0,xend=39,color="black",size=1)+
   geom_segment(y="D9831",yend="D9831",x=0,xend=39,color="black",size=1)+
   scale_color_manual(values=rev(solution_cols),guide=F)+
   scale_size(name="Frequency",range=c(2,5),guide=F)+
-  geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.8),alpha=0.9)+
-  geom_point(data = df2 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1,position=position_nudge(x = 0, y = .2))+
+  geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.5),alpha=0.9)+
+  geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1,position=position_nudge(x = 0, y = .15))+
   coord_cartesian(xlim=c(0,39))+
+  scale_y_discrete(labels=c("d","c","b","a"))+
   labs(x="Experimental day",y="Bird ID")+
   theme_bw()+
-  theme(text=element_text(size=16), axis.text.y=element_text(angle = 45, hjust = 1,colour = color_vector))
+  theme(text=element_text(size=16), axis.text.y=element_text(hjust = 1,colour = color_vector))
 
-ggarrange(p1,p2,p4,p3,labels=c("A","B","C","D"),common.legend = T)
-ggsave("../images/fig2.png",height=9,width=17.8,units="cm",scale=2)
+ggarrange(p1,p2,p4,p3,labels=c("A","B","C","D"),common.legend = T,heights=c(1.75,1))
+ggsave("../images/fig2.pdf",height=12,width=17.4,units="cm",scale=2.5)
 
 
 # Fig 3 ####
@@ -241,6 +225,6 @@ p2 = ggplot(data=df, aes(x=exp_day_count,y=solve_speed))+
   theme_bw()+
   theme(text = element_text(size = 16))
 ggarrange(p1,p2,labels = c("A","B"),ncol=1,heights = c(.4,.6))
-ggsave("../images/fig3.png", width=11.4, height = 9,limitsize = FALSE, scale=2.5, units = "cm")
+ggsave("../images/fig3.pdf", width=11.4, height = 9,limitsize = FALSE, scale=2.5, units = "cm")
 
 

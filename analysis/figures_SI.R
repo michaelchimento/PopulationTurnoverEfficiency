@@ -20,6 +20,7 @@ fit = survfit(Surv(latency_to_solve, censor) ~ condition + 1, data=df)
 summary(fit)
 ggsurvplot(fit, data = df, pval = TRUE, conf.int = T)
 ggsave("../images/condition_survplot.png",width=10,height=10,units="cm",scale=1)
+
 #Fig. S2, overview of all populations ####
 load("../data/df_solves.Rda")
 
@@ -42,11 +43,11 @@ solution_cols = c("#ff5959","#03039e")
 #all plotted together
 ggplot(df1,aes(x=exp_day_count,y=as.factor(ID)))+
   geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5, fill="gray", alpha=0.5) +
-  facet_wrap(condition~population, scales="free",ncol=6)+
+  facet_wrap(condition~population, scales="free",ncol=3)+
   scale_color_manual(values=rev(solution_cols),guide=F)+
   scale_size(name="Frequency",range=c(2,5))+
   geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.8),alpha=0.9)+
-  geom_point(data = df1 %>% subset(innov==1),shape="asterisk",color="#ff5959",size=5,alpha=1,position=position_nudge(x = 0, y = .2))+
+  geom_point(data = df1 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1,position=position_nudge(x = 0, y = .2))+
   coord_cartesian(xlim=c(0,39))+
   #scale_y_discrete(limits = rev(levels(df1$population)))+
   labs(x="Experimental day",y="Bird ID")+
@@ -56,7 +57,7 @@ ggplot(df1,aes(x=exp_day_count,y=as.factor(ID)))+
   geom_vline(data=subset(df1,condition=="turnover"), aes(xintercept = c(32.5)),linetype='dashed',size=1)+
   theme_bw()+
   theme(text=element_text(size=16))
-ggsave("../images/SI_pop_overview.png",width=17.8,height=12, units="cm",limitsize = FALSE, scale=2)
+ggsave("../images/SI_pop_overview.png",width=17.4,height=20, units="cm",limitsize = FALSE, scale=2)
 
 #Fig. S3, innovation timing between conditions ####
 load("../data/df_solves.Rda")
