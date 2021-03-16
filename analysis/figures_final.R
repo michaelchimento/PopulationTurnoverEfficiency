@@ -37,7 +37,7 @@ p_speed = ggplot(df,aes(x=scaled_solveindex,y=solve_speed))+
 
 ggarrange(puzzle,pinpoint,p_speed,labels = c("A","B","C"),
           font.label = list(color="black"),ncol=3,widths=c(1.2,1.4,.8),hjust=c(-.5,-.5,1.5))
-ggsave("../images/fig1.pdf",width=17.4, height = 5,limitsize = TRUE, scale=2.5, units="cm")
+ggsave("../images/fig1.tiff",width=17.4, height = 5,limitsize = TRUE, scale=2, units="cm")
 
 # Fig 2 ####
 load("../data/df_solves.Rda")
@@ -59,7 +59,7 @@ df2 %>% summarise(length(unique(ID)))
 df2 %>% summarise(sum(freq))
 p1 = ggplot(df2 %>% filter(condition=="static"),aes(x=exp_day_count,y=as.factor(population)))+
   scale_color_manual(values=rev(solution_cols),guide=F)+
-  scale_size(name="Frequency",range=c(2,5))+
+  scale_size(name="Daily solution frequency",range=c(2,5))+
   geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5,fill="grey", alpha=.1, show.legend=F) +
   geom_point(data = df2 %>% subset(innov==0),aes(color=Event,size=freq),position=position_jitter(w = 0, h = 0.3),alpha=0.4)+
   geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1)+
@@ -75,7 +75,7 @@ df2 %>% summarise(length(unique(ID)))
 df2 %>% summarise(sum(freq))
 p2 = ggplot(df2 %>% filter(condition=="turnover"),aes(x=exp_day_count,y=as.factor(population)))+
   scale_color_manual(values=rev(solution_cols),guide=F)+
-  scale_size(name="Frequency",range=c(2,5))+
+  scale_size(name="Daily solution frequency",range=c(2,5))+
   geom_rect(ymin=0, ymax=18, xmin=0, xmax=11.5, fill="gray", alpha=0.5) +
   geom_point(data = df2 %>% subset(innov==0),aes(color=Event,size=freq),position=position_jitter(w = 0, h = 0.3),alpha=0.4)+
   geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1)+
@@ -127,8 +127,8 @@ p3 = ggplot(df2,aes(x=exp_day_count,y=as.factor(ID)))+
   geom_segment(y="DDB02",yend="DDB02",x=25.5,xend=39,color="black",size=1)+
   geom_segment(y="DA99E",yend="DA99E",x=32.5,xend=39,color="black",size=1)+
   scale_color_manual(values=rev(solution_cols),guide=F)+
-  scale_size(name="Frequency",range=c(2,5),guide=F)+
-  geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.8),alpha=0.9)+
+  scale_size(name="Daily solution frequency",range=c(2,5),guide=F)+
+  geom_point(aes(color=Event,size=freq),position=position_dodgev(height=1),alpha=0.9)+
   geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1,position=position_nudge(x = 0, y = .275))+
   coord_cartesian(xlim=c(0,39))+
   scale_y_discrete(labels=c("m","l","k","j","i","h","g","f","e"))+
@@ -149,7 +149,7 @@ p4 = ggplot(df2,aes(x=exp_day_count,y=as.factor(ID)))+
   geom_segment(y="DACDC",yend="DACDC",x=0,xend=39,color="black",size=1)+
   geom_segment(y="D9831",yend="D9831",x=0,xend=39,color="black",size=1)+
   scale_color_manual(values=rev(solution_cols),guide=F)+
-  scale_size(name="Frequency",range=c(2,5),guide=F)+
+  scale_size(name="Daily solution frequency",range=c(2,5),guide=F)+
   geom_point(aes(color=Event,size=freq),position=position_dodgev(height=.5),alpha=0.9)+
   geom_point(data = df2 %>% subset(innov==1),shape="triangle",color="#e55050",size=5,alpha=1,position=position_nudge(x = 0, y = .15))+
   coord_cartesian(xlim=c(0,39))+
@@ -159,7 +159,7 @@ p4 = ggplot(df2,aes(x=exp_day_count,y=as.factor(ID)))+
   theme(text=element_text(size=16), axis.text.y=element_text(hjust = 1,colour = color_vector))
 
 ggarrange(p1,p2,p4,p3,labels=c("A","B","C","D"),common.legend = T,heights=c(1.75,1))
-ggsave("../images/fig2.pdf",height=12,width=17.4,units="cm",scale=2.5)
+ggsave("../images/fig2.tiff",height=12,width=17.4,units="cm",scale=2)
 
 
 # Fig 3 ####
@@ -225,6 +225,6 @@ p2 = ggplot(data=df, aes(x=exp_day_count,y=solve_speed))+
   theme_bw()+
   theme(text = element_text(size = 16))
 ggarrange(p1,p2,labels = c("A","B"),ncol=1,heights = c(.4,.6))
-ggsave("../images/fig3.pdf", width=11.4, height = 9,limitsize = FALSE, scale=2.5, units = "cm")
+ggsave("../images/fig3.tiff", width=11.4, height = 9,limitsize = FALSE, scale=2.5, units = "cm")
 
 
